@@ -287,44 +287,46 @@ function applyFinancialModelSectionTemplate(masterHeadingText, contentPairs) {
              });
          
              $('#generateButton').click(function() {
-                let selectedTemplate = $('#templateSelect').val();
-                let content = tinymce.get('codeEditor').getContent({format: 'raw'});
-                let doc = new DOMParser().parseFromString(content, 'text/html');
+    let selectedTemplate = $('#templateSelect').val();
+    let content = tinymce.get('codeEditor').getContent({format: 'raw'});
+    let doc = new DOMParser().parseFromString(content, 'text/html');
 
-                // Extracting the text content of the first heading (masterHeading)
-                let masterHeadingEl = doc.querySelector('h1, h2, h3, h4');
-                if (!masterHeadingEl) {
-                    alert('Please ensure the master heading is formatted correctly.');
-                    return; // Exit if no master heading is found
-                }
-                let masterHeadingText = masterHeadingEl.textContent.trim();
+    // Extracting the text content of the first heading (masterHeading)
+    let masterHeadingEl = doc.querySelector('h1, h2, h3, h4');
+    if (!masterHeadingEl) {
+        alert('Please ensure the master heading is formatted correctly.');
+        return; // Exit if no master heading is found
+    }
+    let masterHeadingText = masterHeadingEl.textContent.trim();
 
-                let miniHeadings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b, li')).filter(heading => heading !== masterHeadingEl);
-                let paragraphs = Array.from(doc.querySelectorAll('p'));
+    let miniHeadings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b, li')).filter(heading => heading !== masterHeadingEl);
+    let paragraphs = Array.from(doc.querySelectorAll('p'));
 
-                // Construct contentPairs excluding the master heading
-                let contentPairs = miniHeadings.map((heading, index) => ({
-                    heading: heading.textContent.trim(),
-                    paragraph: paragraphs[index] ? paragraphs[index].textContent.trim() : ''
-                }));
+    // Construct contentPairs excluding the master heading
+    let contentPairs = miniHeadings.map((heading, index) => ({
+        heading: heading.textContent.trim(),
+        paragraph: paragraphs[index] ? paragraphs[index].textContent.trim() : ''
+    }));
 
-                let outputHtml = '';
-                if (selectedTemplate === 'banner section') {
-                    outputHtml = applyBannerSectionTemplate(masterHeadingText, paragraphs[0].textContent.trim());
-                } else if (selectedTemplate === 'about us section') {
-                    outputHtml = applyAboutUsSectionTemplate(masterHeadingText, paragraphs);
-                } else if (selectedTemplate === 'cfo service section') {
-                    outputHtml = applyCfoServiceSectionTemplate(masterHeadingText, contentPairs);
-                } else if (selectedTemplate === 'financial model section') {
-                    outputHtml = applyFinancialModelSectionTemplate(masterHeadingText, contentPairs);
-                } else {
-                    alert('Please select a template.');
-                    return;
-                }
+    let outputHtml = '';
+    if (selectedTemplate === 'banner section') {
+        outputHtml = applyBannerSectionTemplate(masterHeadingText, paragraphs[0].textContent.trim());
+    } else if (selectedTemplate === 'about us section') {
+        outputHtml = applyAboutUsSectionTemplate(masterHeadingText, paragraphs);
+    } else if (selectedTemplate === 'cfo service section') {
+        outputHtml = applyCfoServiceSectionTemplate(masterHeadingText, contentPairs);
+    } else if (selectedTemplate === 'financial model section') {
+        outputHtml = applyFinancialModelSectionTemplate(masterHeadingText, contentPairs);
+    } else {
+        alert('Please select a template.');
+        return;
+    }
 
-                // Use .html() to render the HTML content in the output box
-                $('#codeOutput').html(outputHtml);
-            });
+    // Use .text() to display the raw HTML content in the output box
+    $('#codeOutput').text(outputHtml);
+});
+
+
 
 
          
