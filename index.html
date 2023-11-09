@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Sword to Code Generator Tool</title>
+      <!-- Bootstrap CSS -->
+      <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+      <!-- TinyMCE -->
+      <script src="https://cdn.tiny.cloud/1/cb0f1e1ta6so544037u2lh7wdhj439o8igyhn596pveti1mt/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+      <style>
+         .output-box {
+         background-color: #f8f9fa;
+         border: 1px solid #ced4da;
+         padding: 10px;
+         height: 200px;
+         overflow: auto;
+         white-space: pre-wrap;
+         }
+         .copy-button {
+         margin-top: 10px;
+         }
+      </style>
+   </head>
+   <body>
+      <div class="container mt-5">
+         <div class="row">
+            <div class="col-md-6">
+               <form id="codeForm">
+                  <textarea id="codeEditor"></textarea>
+               </form>
+            </div>
+            <div class="col-md-6">
+               <div class="output-box" id="codeOutput"></div>
+               <button class="btn btn-primary copy-button" id="copyButton">Copy Code</button>
+            </div>
+         </div>
+         <div class="row mt-3">
+            <div class="col-md-6">
+               <select class="form-control" id="templateSelect">
+                  <option value="">Select a Template</option>
+                  <!-- Templates will be added here -->
+               </select>
+            </div>
+            <div class="col-md-6">
+               <button class="btn btn-success" id="generateButton">Generate Code</button>
+               <button class="btn btn-info" id="addTemplateButton">Add Template</button>
+            </div>
+         </div>
+      </div>
+      <!-- jQuery and Bootstrap JS -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+      <script>
+         // Initialize TinyMCE
+         tinymce.init({
+         selector: '#codeEditor',
+         plugins: 'paste code',
+         toolbar: 'code',
+         paste_preprocess: function(plugin, args) {
+             // Define a function to clean the content
+             function cleanNode(node) {
+                 var elements = node.querySelectorAll('*');
+                 elements.forEach(function(el) {
+                     // Remove <strong> tags within headings and replace them with their text content
+                     if (/h[1-6]/i.test(el.tagName)) {
+                         var strongs = el.querySelectorAll('strong');
+                         strongs.forEach(function(strong) {
+                             var textNode = document.createTextNode(strong.textContent);
+                             strong.parentNode.replaceChild(textNode, strong);
+                         });
+                     }
+                     // Remove all attributes from the element
+                     while (el.attributes.length > 0) {
+                         el.removeAttribute(el.attributes[0].name);
+                     }
+                 });
+             }
+         
+             // Create a temporary div element
+             var tmpDiv = document.createElement('div');
+             // Set the HTML content with the pasted data
+             tmpDiv.innerHTML = args.content;
+         
+             // Perform the first pass of cleaning
+             cleanNode(tmpDiv);
+         
+             // Perform a second pass of cleaning as an extra measure
+             cleanNode(tmpDiv);
+         
+             // Update the pasted content with cleaned HTML
+             args.content = tmpDiv.innerHTML;
+         }
+         });
+         
+         
+         
+         
+         
+         // Template array
+         const templates = ['banner section', 'about us section', 'cfo service section', 'financial model section'];
+         
+         
+         // Function to apply the banner section template
+         function applyBannerSectionTemplate(heading, paragraph) {
+             return `<section id="banner-section">
+                 <div class="container-fluid">
+                     <div class="bg_img"><img src="landing/4/img/aboutus-vector-img.png" class="img-fluid" alt="Enterslice" /></div>
+                     <div class="row">
+                         <div class="col-sm-12 col-md-6 col-lg-8">
+                             <div class="left-side">
+                                 <h1><span>${heading.split(' ').slice(0, 2).join(' ')}</span> ${heading.split(' ').slice(2).join(' ')}</h1>
+                                 <p>${paragraph}</p>
+                                 <div class="banner_btn"><a href="#!" class="btn get_started_btn">Get Started</a>
+                                     <button type="button" class="btn get_started_btn2"><img src="landing/4/img/play-circle-icon.png" class="img-fluid" width="24px" alt="" /> Learn More</button>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="col-sm-12 col-md-6 col-lg-4">{{getEnquiryForm}}</div>
+                     </div>
+                 </div>
+             </section>`;
+         }
+         
+         // Function to apply the about us section template
+         function applyAboutUsSectionTemplate(heading, paragraphs) {
+             const headingWords = heading.split(' ');
+             const firstTwoWords = headingWords.slice(0, 2).join(' ');
+             const restOfHeading = headingWords.slice(2).join(' ');
+             const paragraphsHtml = paragraphs.map(p => `<p>${p.textContent.trim()}</p>`).join('');
+         
+             return `<section id="income-about-section">
+                 <div class="container-fluid">
+                 <div class="income-about-us">
+                 <div class="row">
+                 <div class="col-xs-12 col-sm-12 col-md-6 col-lg-7">
+                 <div class="about-us-content">
+                 <h3>${firstTwoWords}<span>${restOfHeading}</span> Services ?</h3>
+                 ${paragraphsHtml}
+                 <button type="button" onclick="openNav()" class="btn applynow">Book Now</button></div>
+                 </div>
+                 <div class="col-xs-12 col-sm-12 col-md-6 col-lg-5">
+                 <div class="banner-img"><img src="landing/4/img/top_banner_img.png" class="img-fluid" alt="" /></div>
+                 </div>
+                 </div>
+                 </div>
+                 </div>
+                 </section>`;
+         }
+         
+         // Function to apply the cfo service section template
+         function applyCfoServiceSectionTemplate(masterHeading, contentPairs) {
+         const masterHeadingWords = masterHeading.split(' ');
+         const masterHeadingFirstWord = masterHeadingWords.slice(0, 1).join(' ');
+         const restMasterHeading = masterHeadingWords.slice(1).join(' ');
+         
+         // Determine the normal structure count (closest lower multiple of 3)
+         const normalStructureCount = contentPairs.length - (contentPairs.length % 3);
+         const remainder = contentPairs.length % 3;
+         const remainderColClass = remainder === 0 ? 'col-sm-12 col-md-4 col-lg-4 mb-5' : `col-sm-12 col-md-${12 / remainder} col-lg-${12 / remainder} mb-5`;
+         
+         // Generate content boxes based on mini headings and paragraphs
+         let contentBoxesHtml = '';
+         contentPairs.forEach((pair, index) => {
+             let colClass = 'col-sm-12 col-md-4 col-lg-4 mb-5'; // Default class for normal structure
+         
+             // If the index is beyond the normal structure count, use the remainder class
+             if (index >= normalStructureCount) {
+                 colClass = remainderColClass;
+             }
+         
+             contentBoxesHtml += `<div class="${colClass}">
+                 <div class="content_box"><img src="landing/4/img/shared_cfo_icon.png" alt="CFO Services" />
+                 <h4>${pair.heading}</h4>
+                 <p>${pair.paragraph}</p>
+                 </div>
+             </div>`;
+         
+             // Insert a new row after every three content boxes or if the next box is the start of the remainder
+             if ((index + 1) % 3 === 0 || index + 1 === normalStructureCount) {
+                 contentBoxesHtml += '</div><div class="row">';
+             }
+         });
+         
+         // Close the last row div if there are more than 3 items and it's a multiple of 3
+         if (contentPairs.length > 3 && remainder === 0) {
+             contentBoxesHtml += '</div>';
+         }
+         
+         return `<section id="shared_cfo_service" class="ptb35">
+             <div class="container-fluid">
+             <div class="title">
+             <h2>${masterHeadingFirstWord}<span>${restMasterHeading}</span> for Startups</h2>
+             </div>
+             <div class="row">
+             ${contentBoxesHtml}
+             </div>
+             </div>
+             </section>`;
+         }
+         
+// Function to apply the financial model section template
+function applyFinancialModelSectionTemplate(masterHeadingText, contentPairs) {
+    if (!masterHeadingText) {
+        console.error('No master heading text provided.');
+        return ''; // Exit the function if no master heading text is provided
+    }
+    
+    let financialModelBoxesHtml = '';
+    let rowHtml = '';
+    let imageIndex = 1;
+    
+    // Function to get image path
+    function getImagePath(index) {
+        return `landing/4/img/financial_modeling_${index}.png`;
+    }
+    
+    contentPairs.forEach((pair, index) => {
+        // Determine if we need a full-width or half-width column based on the index
+        let colClass = (index % 2 === 0 || contentPairs.length % 2 === 0) ? 'col-sm-12 col-md-6 col-lg-6 mb-4' : 'col-sm-12 col-md-12 col-lg-12 mb-4';
+        
+        // Start a new row if index is even
+        if (index % 2 === 0) {
+            rowHtml = index > 0 ? '</div><div class="row">' : '<div class="row">'; // Close the previous row and start a new one
+        }
+        
+        imageIndex = imageIndex < 4 ? imageIndex + 1 : 1;
+        let imagePath = getImagePath(imageIndex);
+
+        // Add the content box
+        rowHtml += `
+            <div class="${colClass}">
+                <div class="financial_modeling_box">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12 col-lg-4"><img src="${getImagePath(imageIndex)}" class="img-fluid" alt="Financial modeling Services"></div>
+                        <div class="col-sm-12 col-md-12 col-lg-8">
+                            <div>
+                                <h3>${pair.heading}</h3>
+                                <p>${pair.paragraph}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        // If index is odd or it's the last element, append the row HTML to the boxes HTML
+        if (index % 2 === 1 || index === contentPairs.length - 1) {
+            financialModelBoxesHtml += rowHtml;
+            rowHtml = ''; // Reset the row HTML
+        }
+    
+    });
+    
+    // Build the final HTML structure
+    return `
+        <section id="financial_modeling_sec" class="ptb35">
+            <div class="container-fluid">
+                <div class="title">
+                    <h2>${masterHeadingText}</h2>
+                </div>
+                ${financialModelBoxesHtml}
+                <div class="book_btn"><a onclick="openNav()" class="btn book_your_app bg_white">Book Your Appointment</a></div>
+            </div>
+        </section>
+    `;
+}
+
+
+
+         
+         
+         $(document).ready(function() {
+             // Add initial templates to dropdown
+             templates.forEach(template => {
+                 $('#templateSelect').append(new Option(template, template));
+             });
+         
+             // Logic to add new template to the dropdown
+             $('#addTemplateButton').click(function() {
+                 let templateName = prompt('Enter the template name');
+                 if (templateName) {
+                     templates.push(templateName);
+                     $('#templateSelect').append(new Option(templateName, templateName));
+                 }
+             });
+         
+             $('#generateButton').click(function() {
+                let selectedTemplate = $('#templateSelect').val();
+                let content = tinymce.get('codeEditor').getContent({format: 'raw'});
+                let doc = new DOMParser().parseFromString(content, 'text/html');
+
+                // Extracting the text content of the first heading (masterHeading)
+                let masterHeadingEl = doc.querySelector('h1, h2, h3, h4');
+                if (!masterHeadingEl) {
+                    alert('Please ensure the master heading is formatted correctly.');
+                    return; // Exit if no master heading is found
+                }
+                let masterHeadingText = masterHeadingEl.textContent.trim();
+
+                let miniHeadings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b, li')).filter(heading => heading !== masterHeadingEl);
+                let paragraphs = Array.from(doc.querySelectorAll('p'));
+
+                // Construct contentPairs excluding the master heading
+                let contentPairs = miniHeadings.map((heading, index) => ({
+                    heading: heading.textContent.trim(),
+                    paragraph: paragraphs[index] ? paragraphs[index].textContent.trim() : ''
+                }));
+
+                let outputHtml = '';
+                if (selectedTemplate === 'banner section') {
+                    outputHtml = applyBannerSectionTemplate(masterHeadingText, paragraphs[0].textContent.trim());
+                } else if (selectedTemplate === 'about us section') {
+                    outputHtml = applyAboutUsSectionTemplate(masterHeadingText, paragraphs);
+                } else if (selectedTemplate === 'cfo service section') {
+                    outputHtml = applyCfoServiceSectionTemplate(masterHeadingText, contentPairs);
+                } else if (selectedTemplate === 'financial model section') {
+                    outputHtml = applyFinancialModelSectionTemplate(masterHeadingText, contentPairs);
+                } else {
+                    alert('Please select a template.');
+                    return;
+                }
+
+                // Use .html() to render the HTML content in the output box
+                $('#codeOutput').html(outputHtml);
+            });
+
+
+         
+             // Logic to copy the content from the output box
+             $('#copyButton').click(function() {
+                 let content = $('#codeOutput').text();
+                 navigator.clipboard.writeText(content).then(function() {
+                     alert('Code copied to clipboard!');
+                 }, function(err) {
+                     alert('Failed to copy code: ', err);
+                 });
+             });
+         });
+      </script>
+   </body>
+</html>
